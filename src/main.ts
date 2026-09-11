@@ -19,7 +19,7 @@ import lambertFragSource from './shaders/custom-frag.glsl?raw';
 //const controls = {
   //tesselations: 5,
   //'Load Scene': loadScene, // A function pointer, essentially
-//};
+//};//
 
 const controls = {
   color: [255, 0, 0]
