@@ -1,32 +1,40 @@
-import {vec3} from 'gl-matrix';
+import {vec3, vec4} from 'gl-matrix';
 import Stats from 'stats-js';
 import * as DAT from 'dat.gui';
 import Icosphere from './geometry/Icosphere';
+import Cube from './geometry/Cube';
 import Square from './geometry/Square';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 
-import lambertVertSource from './shaders/lambert-vert.glsl?raw';
-import lambertFragSource from './shaders/lambert-frag.glsl?raw';
+//import lambertVertSource from './shaders/lambert-vert.glsl?raw';
+import lambertVertSource from './shaders/custom-vert.glsl?raw';
+//import lambertFragSource from './shaders/lambert-frag.glsl?raw';
+import lambertFragSource from './shaders/custom-frag.glsl?raw';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
+//const controls = {
+  //tesselations: 5,
+  //'Load Scene': loadScene, // A function pointer, essentially
+//};
+
 const controls = {
-  tesselations: 5,
-  'Load Scene': loadScene, // A function pointer, essentially
+  color: [255, 0, 0]
 };
 
-let icosphere: Icosphere;
-let square: Square;
-let prevTesselations: number = 5;
+let time = 0;
+
+let cube: Cube;
+
+let defColor = vec4.fromValues(1, 0, 0, 1);
 
 function loadScene() {
-  icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
-  icosphere.create();
-  square = new Square(vec3.fromValues(0, 0, 0));
-  square.create();
+  cube = new Cube(vec3.fromValues(0, 0, 0));
+  cube.create();
+  
 }
 
 function main() {
@@ -39,9 +47,9 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   // Add controls to the gui
+  
   const gui = new DAT.GUI();
-  gui.add(controls, 'tesselations', 0, 8).step(1);
-  gui.add(controls, 'Load Scene');
+  gui.addColor(controls, 'color');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -69,20 +77,16 @@ function main() {
 
   // This function will be called every frame
   function tick() {
+    time += .001;
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
-    if(controls.tesselations != prevTesselations)
-    {
-      prevTesselations = controls.tesselations;
-      icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
-      icosphere.create();
-    }
-    renderer.render(camera, lambert, [
-      icosphere,
-      // square,
-    ]);
+   
+    let color3 = vec3.fromValues(controls.color[0], controls.color[1], controls.color[2]);
+    vec3.normalize(color3, color3);
+    let color4 = vec4.fromValues(color3[0], color3[1], color3[2], 1);
+    renderer.render(camera, lambert, [cube], color4, time);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
